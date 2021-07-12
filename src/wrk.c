@@ -240,6 +240,7 @@ void *thread_main(void *arg)
         script_request(thread->L, &request, &length);
     }
 
+    //给当前线程 根据连接数分配连接所需的内存
     thread->cs = zcalloc(thread->connections * sizeof(connection));
     connection *c = thread->cs;
 
@@ -250,14 +251,16 @@ void *thread_main(void *arg)
         c->request = request;
         c->length = length;
         c->delayed = cfg.delay;
+        //根据线程结构体和连接对象,创建socket,设置为异步,使用socket进行连接,
+        //并将socket绑定到thread结构体loop上
         connect_socket(thread, c);
     }
 
     aeEventLoop *loop = thread->loop;
-    aeCreateTimeEvent(loop, RECORD_INTERVAL_MS, record_rate, thread, NULL);
+    aeCreateTimeEvent(loop, RECORD_INTERVAL_MS, record_rate, thread, NULL); //给loop添加时间事件,设置回调函数record_rate
 
-    thread->start = time_us();
-    aeMain(loop);
+    thread->start = time_us(); //记录开始时间
+    aeMain(loop);              //进入当前线程的loop事件,处理请求,
 
     aeDeleteEventLoop(loop);
     zfree(thread->cs);
@@ -270,23 +273,23 @@ static int connect_socket(thread *thread, connection *c)
     struct addrinfo *addr = thread->addr;
     struct aeEventLoop *loop = thread->loop;
     int fd, flags;
-
+    //创建socket
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
 
     flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK); //根据socket的句柄设置异步非阻塞
 
-    if (connect(fd, addr->ai_addr, addr->ai_addrlen) == -1)
+    if (connect(fd, addr->ai_addr, addr->ai_addrlen) == -1) //进行连接
     {
         if (errno != EINPROGRESS)
             goto error;
     }
 
     flags = 1;
-    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flags, sizeof(flags));
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &flags, sizeof(flags)); //启动TCP_NODELAY，就意味着禁用了Nagle算法，允许小包的发送
 
     flags = AE_READABLE | AE_WRITABLE;
-    if (aeCreateFileEvent(loop, fd, flags, socket_connected, c) == AE_OK)
+    if (aeCreateFileEvent(loop, fd, flags, socket_connected, c) == AE_OK) //根据socket的句柄,增加读/写事件,设置回调函数socket_connected
     {
         c->parser.data = c;
         c->fd = fd;
@@ -428,8 +431,8 @@ static void socket_connected(aeEventLoop *loop, int fd, void *data, int mask)
     http_parser_init(&c->parser, HTTP_RESPONSE);
     c->written = 0;
 
-    aeCreateFileEvent(c->thread->loop, fd, AE_READABLE, socket_readable, c);
-    aeCreateFileEvent(c->thread->loop, fd, AE_WRITABLE, socket_writeable, c);
+    aeCreateFileEvent(c->thread->loop, fd, AE_READABLE, socket_readable, c);  //读事件
+    aeCreateFileEvent(c->thread->loop, fd, AE_WRITABLE, socket_writeable, c); //写事件
 
     return;
 
