@@ -146,7 +146,7 @@ int main(int argc, char **argv)
         }
     }
 
-    //创建信号,指定信号处理函数hander
+    //创建信号,指定信号处理函数handler
     struct sigaction sa = {
         .sa_handler = handler,
         .sa_flags = 0,
