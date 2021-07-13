@@ -6,17 +6,20 @@
 #include <openssl/ssl.h>
 #include "wrk.h"
 
-typedef enum {
+typedef enum
+{
     OK,
     ERROR,
     RETRY
 } status;
 
-struct sock {
-    status ( *connect)(connection *, char *);
-    status (   *close)(connection *);
-    status (    *read)(connection *, size_t *);
-    status (   *write)(connection *, char *, size_t, size_t *);
+//sock 封装常用函数指针
+struct sock
+{
+    status (*connect)(connection *, char *);
+    status (*close)(connection *);
+    status (*read)(connection *, size_t *);
+    status (*write)(connection *, char *, size_t, size_t *);
     size_t (*readable)(connection *);
 };
 

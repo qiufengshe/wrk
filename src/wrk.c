@@ -25,6 +25,8 @@ static struct
     stats *requests;
 } statistics;
 
+//全局初始化sock,并给函数指针绑定对应的函数,这里绑定的都是http
+//如果是https,在main函数中,会重新指向带ssl_*的函数
 static struct sock sock = {
     .connect = sock_connect,
     .close = sock_close,
