@@ -170,7 +170,8 @@ int main(int argc, char **argv)
     sleep(cfg.duration);
     stop = 1;
 
-    //对每个线程执行的数据,进行汇总
+    //等待所有工作线程执行结束,计算完整请求数 所有请求的大小
+    //及错误的信息(连接数/读取数/写入数/超时时间/状态)
     for (uint64_t i = 0; i < cfg.threads; i++)
     {
         thread *t = &threads[i];
