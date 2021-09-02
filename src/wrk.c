@@ -97,6 +97,7 @@ int main(int argc, char **argv)
         sock.readable = ssl_readable;
     }
 
+    //注册信号
     signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, SIG_IGN);
 
