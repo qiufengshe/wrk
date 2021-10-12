@@ -406,7 +406,6 @@ enum http_host_state
 /* Macros for character classes; depends on strict-mode  */
 #define CR                  '\r'
 #define LF                  '\n'
-//技巧 将字符进行按位或 0x20(32的十六进制)
 #define LOWER(c)            (unsigned char)(c | 0x20)
 #define IS_ALPHA(c)         (LOWER(c) >= 'a' && LOWER(c) <= 'z')
 #define IS_NUM(c)           ((c) >= '0' && (c) <= '9')
